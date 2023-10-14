@@ -7,12 +7,6 @@ import creds
 # st.title("Doctor Patient App")
 
 
-model = whisper.load_model("base")
-result = model.transcribe("data/audio.wav", fp16=False)
-
-print(result["text"])
-
-
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-3.0",
     use_auth_token=creds.use_auth_token)
