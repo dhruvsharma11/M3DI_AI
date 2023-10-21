@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Audio Recorder</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      label {
+        font-weight: bold;
+      }
+      input[type="number"] {
+        width: 50px;
+        padding: 5px;
+        margin-right: 10px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      audio {
+        margin-top: 20px;
+      }
+      .file-path {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+      .status {
+        margin-top: 20px;
+        font-size: 18px;
+        color: green;
+      }
+      .transcription {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Audio Recorder</h1>
+    <label for="duration">Recording duration (seconds):</label>
+    <input type="number" id="duration" min="1" value="5" />
+    <br /><br />
+    <button onclick="startRecording()">Start Record</button>
+    <div id="status" class="status"></div>
+    <div id="filePath" class="file-path"></div>
+    <div id="transcription" class="transcription"></div>
+
+    <script>
+      function startRecording() {
+        const duration = document.getElementById("duration").value;
+
+        // Display recording status
+        const statusElement = document.getElementById("status");
+        statusElement.innerText = "Recording in progress...";
+
+        fetch("/record", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            duration: duration,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok.");
+            }
+            // Extract file path from response headers
+            const filePath = response.headers.get("File-Path");
+            document.getElementById("filePath").innerText =
+              "File saved at: " + filePath;
+            return response.blob(); // Convert response to Blob
+          })
+          .then((blob) => {
+            const audioUrl = URL.createObjectURL(blob);
+            const audioElement = document.createElement("audio");
+            audioElement.controls = true;
+            audioElement.src = audioUrl;
+            document.body.appendChild(audioElement);
+            // Clear the recording status
+            statusElement.innerText = "";
+
+            // Convert audio to text using Web Speech API
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.interimResults = true;
+            recognition.onresult = (event) => {
+              const transcript = event.results[0][0].transcript;
+              const transcriptionElement =
+                document.getElementById("transcription");
+              transcriptionElement.innerText = "Transcription: " + transcript;
+            };
+            recognition.onend = () => {
+              document.getElementById("status").innerText =
+                "Recording completed.";
+            };
+            recognition.start();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            statusElement.innerText = "Error during recording";
+          });
+      }
+    </script>
+  </body>
+</html>
