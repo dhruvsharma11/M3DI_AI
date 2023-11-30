@@ -1,21 +1,22 @@
 from flask import Flask, render_template, request, jsonify, send_file
-import os
 import sounddevice as sd
 import numpy as np
 import wave
 import io
+import subprocess
+import os
 
 app = Flask(__name__)
 
 # Set the default file path for audio recording
-DEFAULT_FILE_PATH = "recorded_audio.wav"
+DEFAULT_FILE_PATH = "data/audio.wav"
 
 # Record audio and save it to the file path
 
 
 def record_audio(duration, sample_rate=44100):
     audio_data = sd.rec(int(duration * sample_rate),
-                        samplerate=sample_rate, channels=1, dtype=np.int16)
+                        samplerate=sample_rate, channels=1, dtype=np.int16, device=1)
     sd.wait()
     write_wav(DEFAULT_FILE_PATH, audio_data)
     return DEFAULT_FILE_PATH, audio_data
@@ -40,12 +41,14 @@ def index():
 def record():
     duration = int(request.form['duration'])
     file_path, audio_data = record_audio(duration)
-    return send_file(io.BytesIO(audio_data.tobytes()),
-                     attachment_filename='recorded_audio.wav',
-                     mimetype='audio/wav',
-                     as_attachment=True,
-                     cache_timeout=0), file_path
+
+    # Now, call the transcription script using a subprocess
+    transcription_script_path = 'doctor_patient.py'
+    subprocess.run(['python', transcription_script_path, file_path],
+                   capture_output=True, text=True, check=True)
+
+    return jsonify(file_path=file_path)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
