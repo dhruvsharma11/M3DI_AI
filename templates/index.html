@@ -60,6 +60,7 @@
     <script>
       function startRecording() {
         const duration = document.getElementById("duration").value;
+        console.log("Recording duration:", duration);
 
         // Display recording status
         const statusElement = document.getElementById("status");
@@ -75,39 +76,29 @@
           }),
         })
           .then((response) => {
+            console.log("Server response:", response.json());
             if (!response.ok) {
               throw new Error("Network response was not ok.");
             }
-            // Extract file path from response headers
-            const filePath = response.headers.get("File-Path");
+            // Parse JSON response
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Received data:", data);
+            const filePath = data.file_path;
+            console.log("File path:", filePath);
             document.getElementById("filePath").innerText =
               "File saved at: " + filePath;
-            return response.blob(); // Convert response to Blob
-          })
-          .then((blob) => {
-            const audioUrl = URL.createObjectURL(blob);
-            const audioElement = document.createElement("audio");
-            audioElement.controls = true;
-            audioElement.src = audioUrl;
-            document.body.appendChild(audioElement);
+
+            // You can use the file path for further processing
+            // // For example, you can load the audio using the file path
+            // const audioElement = document.createElement("audio");
+            // audioElement.controls = true;
+            // audioElement.src = filePath;
+            // document.body.appendChild(audioElement);
+
             // Clear the recording status
             statusElement.innerText = "";
-
-            // Convert audio to text using Web Speech API
-            const recognition = new webkitSpeechRecognition();
-            recognition.lang = "en-US";
-            recognition.interimResults = true;
-            recognition.onresult = (event) => {
-              const transcript = event.results[0][0].transcript;
-              const transcriptionElement =
-                document.getElementById("transcription");
-              transcriptionElement.innerText = "Transcription: " + transcript;
-            };
-            recognition.onend = () => {
-              document.getElementById("status").innerText =
-                "Recording completed.";
-            };
-            recognition.start();
           })
           .catch((error) => {
             console.error("Error:", error);
