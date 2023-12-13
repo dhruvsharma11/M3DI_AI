@@ -1,3 +1,4 @@
+import datetime
 from pyannote.audio.pipelines.speaker_verification import PretrainedSpeakerEmbedding
 from sklearn.cluster import AgglomerativeClustering
 import contextlib
@@ -11,8 +12,9 @@ from pydub import AudioSegment
 import numpy as np
 import torch
 import sys
+# import os
+# os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-import datetime
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
