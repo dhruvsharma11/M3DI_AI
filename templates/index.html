@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Audio Recorder</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      label {
+        font-weight: bold;
+      }
+      input[type="number"] {
+        width: 50px;
+        padding: 5px;
+        margin-right: 10px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      audio {
+        margin-top: 20px;
+      }
+      .file-path {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+      .status {
+        margin-top: 20px;
+        font-size: 18px;
+        color: green;
+      }
+      .transcription {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="recording-section">
+      <h1>Audio Recorder</h1>
+      <label for="duration">Recording duration (seconds):</label>
+      <input type="number" id="duration" min="1" value="5" />
+      <br /><br />
+      <button onclick="startRecording()">Start Record</button>
+      <!-- Add the Sign Out button -->
+      <button onclick="signOut()">Sign Out</button>
+      <div id="status" class="status"></div>
+      <div id="filePath" class="file-path"></div>
+      <div id="transcription" class="transcription"></div>
+    </div>
+
+    <script>
+      function startRecording() {
+        const duration = document.getElementById("duration").value;
+        console.log("Recording duration:", duration);
+
+        // Display recording status
+        const statusElement = document.getElementById("status");
+        statusElement.innerText = "Recording in progress...";
+
+        fetch("/record", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            duration: duration,
+          }),
+        })
+          .then((response) => {
+            console.log("Server response:", response.json());
+            if (!response.ok) {
+              throw new Error("Network response was not ok.");
+            }
+            // Parse JSON response
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Received data:", data);
+            const filePath = data.file_path;
+            console.log("File path:", filePath);
+            document.getElementById("filePath").innerText =
+              "File saved at: " + filePath;
+
+            // You can use the file path for further processing
+            // // For example, you can load the audio using the file path
+            // const audioElement = document.createElement("audio");
+            // audioElement.controls = true;
+            // audioElement.src = filePath;
+            // document.body.appendChild(audioElement);
+
+            // Clear the recording status
+            statusElement.innerText = "";
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            statusElement.innerText = "Error during recording";
+          });
+      }
+
+      // Sign Out function
+      function signOut() {
+        // Redirect to the logout route
+        window.location.href = "/logout";
+      }
+    </script>
+  </body>
+</html>
